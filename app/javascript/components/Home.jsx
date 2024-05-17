@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 export default () => {
   // List of fetched companies
   const [companies, setCompanies] = useState([]);
+  const [pagy, setPagy] = useState({});
+  const [page, setPage] = useState(1);
 
   // Table filters
   const [companyName, setCompanyName] = useState("");
@@ -12,13 +14,24 @@ export default () => {
 
   // Fetch companies from API
   useEffect(() => {
-    const url = "/api/v1/companies";
+    const url = new URL("http://localhost:3000/api/v1/companies");
+
+    const params = { page, companyName, industry, minEmployee, minimumDealAmount };
+    Object.keys(params).forEach(key => {
+      if (params[key]) {
+        url.searchParams.append(key, params[key]);
+      }
+    });
     fetch(url)
       .then((res) => {
         return res.json();
       })
-      .then((res) => setCompanies(res))
-  }, [])
+      .then((res) => {
+          setCompanies(res.data)
+          setPagy(res.pagy)
+        }
+      )
+  }, [page, companyName, industry, minEmployee, minimumDealAmount])
 
   return (
     <div className="vw-100 primary-color d-flex align-items-center justify-content-center">
@@ -66,6 +79,12 @@ export default () => {
               ))}
             </tbody>
           </table>
+
+          <div className="input-group mb-4">
+            {Array.from({ length: pagy.pages }, (_, i) => i + 1).map(num => (
+              <button key={num} onClick={() => setPage(num)}>{num}</button>
+            ))}
+          </div>
         </div>
       </div>
     </div>
